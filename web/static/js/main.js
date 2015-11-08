@@ -95,33 +95,7 @@ $$.utils = {};
         var $catalogues = $('[data-component="catalogue-container"]');
 
         if ($catalogues.length) {
-            // TODO: move to function
-            $.ajax({
-                type: 'POST',
-                url: '/ajax/fetchCatalogues',
-                data: {},
-                success: function (data) {
-                    $catalogues.empty();
-                    var elements = [];
-
-                    for (var idx in data['catalogues']) {
-                        var cat = data['catalogues'][idx];
-
-                        elements.push('<li><a href="javascript:;" data-id="' + cat.id + '">' +
-                            $$.utils.escapeHtml(cat.name) + '</a></li>');
-                    }
-
-                    $catalogues.append(elements.join(''));
-                    $catalogues.attr('data-current', 0);
-                }
-            });
-
-            // TODO: move to function
-            $catalogues.on('click', 'a', function () {
-                var link = this;
-                var $link = $(link);
-                var fetchId = parseInt($link.attr('data-id'), 10);
-
+            var loadCatalogues = function (fetchId) {
                 $.ajax({
                     type: 'POST',
                     url: '/ajax/fetchCatalogues',
@@ -145,6 +119,18 @@ $$.utils = {};
                         $catalogues.attr('data-current', fetchId);
                     }
                 });
+            };
+
+            // init top-level catalogues
+            loadCatalogues(0);
+
+            // load on catalogue click
+            $catalogues.on('click', 'a', function () {
+                var link = this;
+                var $link = $(link);
+                var fetchId = parseInt($link.attr('data-id'), 10);
+
+                loadCatalogues(fetchId);
             });
         }
     });
