@@ -95,6 +95,7 @@ $$.utils = {};
         var $catalogues = $('[data-component="catalogue-container"]');
 
         if ($catalogues.length) {
+            // TODO: move to function
             $.ajax({
                 type: 'POST',
                 url: '/ajax/fetchCatalogues',
@@ -103,20 +104,47 @@ $$.utils = {};
                     $catalogues.empty();
                     var elements = [];
 
-                    for (var idx in data) {
-                        var cat = data[idx];
+                    for (var idx in data['catalogues']) {
+                        var cat = data['catalogues'][idx];
 
                         elements.push('<li><a href="javascript:;" data-id="' + cat.id + '">' +
                             $$.utils.escapeHtml(cat.name) + '</a></li>');
                     }
 
                     $catalogues.append(elements.join(''));
+                    $catalogues.attr('data-current', 0);
                 }
             });
 
+            // TODO: move to function
             $catalogues.on('click', 'a', function () {
-                // TODO: load catalogue
-                alert($(this).text());
+                var link = this;
+                var $link = $(link);
+                var fetchId = parseInt($link.attr('data-id'), 10);
+
+                $.ajax({
+                    type: 'POST',
+                    url: '/ajax/fetchCatalogues',
+                    data: {parentId: fetchId},
+                    success: function (data) {
+                        $catalogues.empty();
+                        var elements = [];
+
+                        if (data['parent']) {
+                            elements.push('<li><a href="javascript:;" data-id="' + data['parent'].id + '">..</a></li>');
+                        }
+
+                        for (var idx in data['catalogues']) {
+                            var cat = data['catalogues'][idx];
+
+                            elements.push('<li><a href="javascript:;" data-id="' + cat.id + '">' +
+                                $$.utils.escapeHtml(cat.name) + '</a></li>');
+                        }
+
+                        $catalogues.append(elements.join(''));
+                        $catalogues.attr('data-current', fetchId);
+                    }
+                });
             });
         }
     });

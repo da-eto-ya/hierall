@@ -2,7 +2,9 @@
 
 use Herrera\Pdo\PdoServiceProvider;
 use Hierall\CatalogueRepository;
+use Silex\Application;
 use Silex\Provider\TwigServiceProvider;
+use Symfony\Component\HttpFoundation\Request;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
@@ -34,32 +36,33 @@ $app['hierall.catalogues'] = $app->share(function ($app) {
 // Routes
 
 // Mainpage
-$app->get('/', function () use ($app) {
+$app->get('/', function (Application $app) {
     return $app['twig']->render('mainpage.twig');
 });
 
 // Fetch catalogues
-$app->post('/ajax/fetchCatalogues', function () use ($app) {
-    $catalogues = $app['hierall.catalogues']->fetchRootCatalogues();
+$app->post('/ajax/fetchCatalogues', function (Request $request, Application $app) {
+    /** @var CatalogueRepository $catalogueRepository */
+    $catalogueRepository = $app['hierall.catalogues'];
+    $parentId = (int)$request->get('parentId', 0);
 
-    return $app->json($catalogues);
-});
+    if (!$parentId) {
+        $catalogues = $catalogueRepository->fetchRootCatalogues();
+        $parent = null;
+    } else {
+        $catalogues = $catalogueRepository->fetchChildrenCatalogues($parentId);
+        $parent = $catalogueRepository->fetchParentNode($parentId);
 
-// Testing routes
-$app->get('/hello/{name}', function ($name) use ($app) {
-    return 'Hello ' . $app->escape($name) . ". Router works as expected.";
-});
-
-// Testing PDO
-$app->get('/pg', function () use ($app, $pdo) {
-    $rows = [];
-    $res = $pdo->query("SELECT * FROM test");
-
-    while ($row = $res->fetch(PDO::FETCH_ASSOC)) {
-        $rows[] = $row['id'] . ':' . $row['name'];
+        // top-level
+        if (!$parent) {
+            $parent = ['id' => 0, 'name' => '..'];
+        }
     }
 
-    return join("<br>", $rows);
+    return $app->json([
+        'catalogues' => $catalogues,
+        'parent' => $parent,
+    ]);
 });
 
 
