@@ -1,6 +1,12 @@
 {
   "require": {
     "silex/silex": "~1.3",
-    "herrera-io/silex-pdo": "~1.2"
+    "herrera-io/silex-pdo": "~1.2",
+    "twig/twig": "~1.0"
+  },
+  "autoload": {
+    "psr-0": {
+      "": "src/"
+    }
   }
 }
