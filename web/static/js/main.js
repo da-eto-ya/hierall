@@ -95,6 +95,20 @@ $$.utils = {};
         var $catalogues = $('[data-component="catalogue-container"]');
 
         if ($catalogues.length) {
+            var formatLink = function (role, id, name) {
+                return [
+                    '<a href="javascript:;" class="cat-item-',
+                    role,
+                    '" data-role="',
+                    role,
+                    '" data-id="',
+                    $$.utils.escapeHtml(id),
+                    '">',
+                    $$.utils.escapeHtml(name),
+                    '</a>'
+                ].join('');
+            };
+
             var loadCatalogues = function (fetchId) {
                 $.ajax({
                     type: 'POST',
@@ -105,14 +119,15 @@ $$.utils = {};
                         var elements = [];
 
                         if (data['parent']) {
-                            elements.push('<li><a href="javascript:;" data-id="' + data['parent'].id + '">..</a></li>');
+                            elements.push('<li>' + formatLink('fetch', data['parent'].id, '..') + '</li>');
                         }
 
                         for (var idx in data['catalogues']) {
                             var cat = data['catalogues'][idx];
-
-                            elements.push('<li><a href="javascript:;" data-id="' + cat.id + '">' +
-                                $$.utils.escapeHtml(cat.name) + '</a></li>');
+                            elements.push('<li>' + formatLink('fetch', cat.id, cat.name) + ' ' +
+                                formatLink('edit', cat.id, 'Edit') + ' ' +
+                                formatLink('delete', cat.id, 'Delete') +
+                                '</li>');
                         }
 
                         $catalogues.append(elements.join(''));
@@ -125,12 +140,28 @@ $$.utils = {};
             loadCatalogues(0);
 
             // load on catalogue click
-            $catalogues.on('click', 'a', function () {
+            $catalogues.on('click', 'a[data-role="fetch"]', function () {
                 var link = this;
                 var $link = $(link);
                 var fetchId = parseInt($link.attr('data-id'), 10);
 
                 loadCatalogues(fetchId);
+            });
+
+            // edit catalogue item
+            $catalogues.on('click', 'a[data-role="edit"]', function () {
+                var link = this;
+                var $link = $(link);
+                var fetchId = parseInt($link.attr('data-id'), 10);
+                // TODO: edit
+            });
+
+            // remove catalogue item
+            $catalogues.on('click', 'a[data-role="delete"]', function () {
+                var link = this;
+                var $link = $(link);
+                var fetchId = parseInt($link.attr('data-id'), 10);
+                // TODO: remove
             });
         }
     });
