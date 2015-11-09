@@ -4,6 +4,8 @@
  */
 namespace Hierall;
 
+use PDO;
+
 /**
  * Class CatalogueRepository
  * Репозиторий для работы с каталогами.
@@ -13,15 +15,15 @@ class CatalogueRepository
 {
     /**
      * Инстанс PDO, используемый для связи с БД.
-     * @var \PDO
+     * @var PDO
      */
     private $pdo = null;
 
     /**
      * CatalogueRepository constructor.
-     * @param \PDO $pdo
+     * @param PDO $pdo
      */
-    public function __construct(\PDO $pdo)
+    public function __construct(PDO $pdo)
     {
         $this->pdo = $pdo;
     }
@@ -36,7 +38,7 @@ class CatalogueRepository
         $catalogues = [];
         $res = $this->pdo->query($sql);
 
-        while ($row = $res->fetch(\PDO::FETCH_ASSOC)) {
+        while ($row = $res->fetch(PDO::FETCH_ASSOC)) {
             $catalogues[] = $this->cleanCatalogue($row);
         }
 
@@ -69,7 +71,7 @@ class CatalogueRepository
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([$parentId]);
 
-        while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $catalogues[] = $this->cleanCatalogue($row);
         }
 
@@ -92,7 +94,7 @@ class CatalogueRepository
         ";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([$nodeId]);
-        $parent = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $parent = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$parent) {
             return null;
@@ -132,8 +134,9 @@ class CatalogueRepository
      */
     public function renameCatalogue($catalogueId, $name)
     {
-        $catalogueId = (int)$catalogueId;
         $success = false;
+        $catalogueId = (int)$catalogueId;
+        $name = (string)$name;
 
         if ($catalogueId) {
             $sql = "UPDATE catalogues SET name = ? WHERE id = ?";
@@ -146,5 +149,46 @@ class CatalogueRepository
         }
 
         return $success;
+    }
+
+    /**
+     * Удаляет все данные каталогов.
+     */
+    public function truncateCatalogues()
+    {
+        $sql = "TRUNCATE catalogues RESTART IDENTITY";
+        $this->pdo->exec($sql);
+    }
+
+    /**
+     * Добавляет каталог.
+     * @param string   $name
+     * @param int|null $parentId
+     * @return int|false ID созданного каталога или false в случае ошибки
+     */
+    public function addCatalogue($name, $parentId)
+    {
+        $result = false;
+        $name = (string)$name;
+
+        if (null === $parentId) {
+            $sql = "INSERT INTO catalogues (name) VALUES (?)";
+            $stmt = $this->pdo->prepare($sql);
+            $result = $stmt->execute([$name]);
+        } else {
+            $parentId = (int)$parentId;
+
+            if ($parentId) {
+                $sql = "INSERT INTO catalogues (name, parent_id) VALUES (?, ?)";
+                $stmt = $this->pdo->prepare($sql);
+                $result = $stmt->execute([$name, $parentId]);
+            }
+        }
+
+        if ($result) {
+            $result = (int)$this->pdo->lastInsertId('catalogues_id_seq');
+        }
+
+        return $result;
     }
 }
