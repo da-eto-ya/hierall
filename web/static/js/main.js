@@ -152,6 +152,22 @@ $$.utils = {};
                 });
             };
 
+            var renameCatalogue = function (catalogueId, name) {
+                $.ajax({
+                    type: 'POST',
+                    url: '/ajax/renameCatalogue',
+                    data: {catalogueId: catalogueId, name: name},
+                    success: function (data) {
+                        if (data.success) {
+                            $catalogues.find('li[data-catalogue="' + $$.utils.escapeHtml(catalogueId) + '"]')
+                                .find('a[data-role="fetch"]').text(name);
+                        } else {
+                            alert("Can't remove catalogue");
+                        }
+                    }
+                });
+            };
+
             // init top-level catalogues
             loadCatalogues(0);
 
@@ -168,8 +184,17 @@ $$.utils = {};
             $catalogues.on('click', 'a[data-role="edit"]', function () {
                 var link = this;
                 var $link = $(link);
-                var fetchId = parseInt($link.attr('data-id'), 10);
-                // TODO: edit
+                var $fetchLink = $link.parents('li').eq(0).find('a[data-role="fetch"]');
+                var id = parseInt($link.attr('data-id'), 10);
+                var newName = prompt('Rename [' + $fetchLink.text() + '] to: ', '');
+
+                if (null !== newName) {
+                    if ($.trim(newName)) {
+                        renameCatalogue(id, newName);
+                    } else {
+                        alert("Name can't be empty");
+                    }
+                }
             });
 
             // remove catalogue item

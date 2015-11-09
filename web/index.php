@@ -81,6 +81,23 @@ $app->post('/ajax/removeCatalogue', function (Request $request, Application $app
     ]);
 });
 
+// Edit catalogue (rename)
+$app->post('/ajax/renameCatalogue', function (Request $request, Application $app) {
+    /** @var CatalogueRepository $catalogueRepository */
+    $catalogueRepository = $app['hierall.catalogues'];
+    $catalogueId = (int)$request->get('catalogueId', 0);
+    $name = $request->get('name', '');
+    $success = false;
+
+    if ($catalogueId) {
+        $success = $catalogueRepository->renameCatalogue($catalogueId, $name);
+    }
+
+    return $app->json([
+        'success' => $success,
+    ]);
+});
+
 
 // Run
 $app->run();

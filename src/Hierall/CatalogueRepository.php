@@ -103,7 +103,7 @@ class CatalogueRepository
 
     /**
      * Удаляет каталог с заданным ID.
-     * @param $catalogueId
+     * @param int $catalogueId
      * @return bool возвращает true, если удаление действительно было произведено
      */
     public function removeCatalogue($catalogueId)
@@ -115,6 +115,30 @@ class CatalogueRepository
             $sql = "DELETE FROM catalogues WHERE id = ?";
             $stmt = $this->pdo->prepare($sql);
             $success = $stmt->execute([$catalogueId]);
+
+            if ($success) {
+                $success = $stmt->rowCount() > 0;
+            }
+        }
+
+        return $success;
+    }
+
+    /**
+     * Переименовывает каталог с заданным ID.
+     * @param int    $catalogueId
+     * @param string $name
+     * @return bool возвращает true, если переименование действительно было произведено
+     */
+    public function renameCatalogue($catalogueId, $name)
+    {
+        $catalogueId = (int)$catalogueId;
+        $success = false;
+
+        if ($catalogueId) {
+            $sql = "UPDATE catalogues SET name = ? WHERE id = ?";
+            $stmt = $this->pdo->prepare($sql);
+            $success = $stmt->execute([$name, $catalogueId]);
 
             if ($success) {
                 $success = $stmt->rowCount() > 0;
