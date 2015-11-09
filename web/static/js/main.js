@@ -124,7 +124,8 @@ $$.utils = {};
 
                         for (var idx in data['catalogues']) {
                             var cat = data['catalogues'][idx];
-                            elements.push('<li>' + formatLink('fetch', cat.id, cat.name) + ' ' +
+                            elements.push('<li data-catalogue="' + $$.utils.escapeHtml(cat.id) + '">' +
+                                formatLink('fetch', cat.id, cat.name) + ' ' +
                                 formatLink('edit', cat.id, 'Edit') + ' ' +
                                 formatLink('delete', cat.id, 'Delete') +
                                 '</li>');
@@ -132,6 +133,21 @@ $$.utils = {};
 
                         $catalogues.append(elements.join(''));
                         $catalogues.attr('data-current', fetchId);
+                    }
+                });
+            };
+
+            var removeCatalogue = function (catalogueId) {
+                $.ajax({
+                    type: 'POST',
+                    url: '/ajax/removeCatalogue',
+                    data: {catalogueId: catalogueId},
+                    success: function (data) {
+                        if (data.success) {
+                            $catalogues.find('li[data-catalogue="' + $$.utils.escapeHtml(catalogueId) + '"]').remove();
+                        } else {
+                            alert("Can't remove catalogue");
+                        }
                     }
                 });
             };
@@ -160,8 +176,12 @@ $$.utils = {};
             $catalogues.on('click', 'a[data-role="delete"]', function () {
                 var link = this;
                 var $link = $(link);
-                var fetchId = parseInt($link.attr('data-id'), 10);
-                // TODO: remove
+                var $fetchLink = $link.parents('li').eq(0).find('a[data-role="fetch"]');
+                var id = parseInt($link.attr('data-id'), 10);
+
+                if (confirm('Remove [' + $fetchLink.text() + ']?')) {
+                    removeCatalogue(id);
+                }
             });
         }
     });

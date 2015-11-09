@@ -65,6 +65,22 @@ $app->post('/ajax/fetchCatalogues', function (Request $request, Application $app
     ]);
 });
 
+// Remove catalogue
+$app->post('/ajax/removeCatalogue', function (Request $request, Application $app) {
+    /** @var CatalogueRepository $catalogueRepository */
+    $catalogueRepository = $app['hierall.catalogues'];
+    $catalogueId = (int)$request->get('catalogueId', 0);
+    $success = false;
+
+    if ($catalogueId) {
+        $success = $catalogueRepository->removeCatalogue($catalogueId);
+    }
+
+    return $app->json([
+        'success' => $success,
+    ]);
+});
+
 
 // Run
 $app->run();

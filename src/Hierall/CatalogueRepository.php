@@ -44,6 +44,19 @@ class CatalogueRepository
     }
 
     /**
+     * Возвращает строгие данные каталога (без вспомогательных полей).
+     * @param array $catalogue
+     * @return array
+     */
+    private function cleanCatalogue(array $catalogue)
+    {
+        return [
+            'id' => $catalogue['id'],
+            'name' => $catalogue['name'],
+        ];
+    }
+
+    /**
      * Возвращает дочерние каталоги для указанного.
      * @param int $parentId ID родительского каталога
      * @return array
@@ -61,19 +74,6 @@ class CatalogueRepository
         }
 
         return $catalogues;
-    }
-
-    /**
-     * Возвращает строгие данные каталога (без вспомогательных полей).
-     * @param array $catalogue
-     * @return array
-     */
-    private function cleanCatalogue(array $catalogue)
-    {
-        return [
-            'id' => $catalogue['id'],
-            'name' => $catalogue['name'],
-        ];
     }
 
     /**
@@ -99,5 +99,28 @@ class CatalogueRepository
         } else {
             return $this->cleanCatalogue($parent);
         }
+    }
+
+    /**
+     * Удаляет каталог с заданным ID.
+     * @param $catalogueId
+     * @return bool возвращает true, если удаление действительно было произведено
+     */
+    public function removeCatalogue($catalogueId)
+    {
+        $catalogueId = (int)$catalogueId;
+        $success = false;
+
+        if ($catalogueId) {
+            $sql = "DELETE FROM catalogues WHERE id = ?";
+            $stmt = $this->pdo->prepare($sql);
+            $success = $stmt->execute([$catalogueId]);
+
+            if ($success) {
+                $success = $stmt->rowCount() > 0;
+            }
+        }
+
+        return $success;
     }
 }
